@@ -1,0 +1,652 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Tsukamoto API",
+    "description": "API documentation for Tsukamoto Fuzzy Logic System",
+    "version": "1.0.0"
+  },
+  "host": "localhost:8080",
+  "basePath": "/",
+  "schemes": ["http"],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login user",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LoginRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "schema": {
+              "$ref": "#/definitions/LoginResponse"
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get all users",
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UserResponse"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Create new user",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateUserRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User created successfully"
+          }
+        }
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user by ID",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details",
+            "schema": {
+              "$ref": "#/definitions/UserResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update user",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateUserRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Delete user",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          }
+        }
+      }
+    },
+    "/academic": {
+      "get": {
+        "tags": ["Academic"],
+        "summary": "Get all academic records",
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {
+            "description": "List of academic records",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AcademicResponse"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Academic"],
+        "summary": "Create academic record",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateAcademicRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Academic record created successfully"
+          }
+        }
+      }
+    },
+    "/academic/{id}": {
+      "put": {
+        "tags": ["Academic"],
+        "summary": "Update academic record",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateAcademicRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Academic record updated successfully"
+          }
+        }
+      }
+    },
+    "/academic/student/{student_id}": {
+      "get": {
+        "tags": ["Academic"],
+        "summary": "Get academic records by student ID",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of academic records for student",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AcademicResponse"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/datasets/import": {
+      "post": {
+        "tags": ["Datasets"],
+        "summary": "Import CSV file",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "file_path": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV imported successfully"
+          }
+        }
+      }
+    },
+    "/datasets": {
+      "get": {
+        "tags": ["Datasets"],
+        "summary": "Get all datasets",
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {
+            "description": "List of datasets",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AcademicDTO"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fuzzy/{id}": {
+      "get": {
+        "tags": ["Fuzzy"],
+        "summary": "Get fuzzy calculation by user ID",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fuzzy calculation result",
+            "schema": {
+              "$ref": "#/definitions/FuzzyResponse"
+            }
+          }
+        }
+      }
+    },
+    "/university": {
+      "get": {
+        "tags": ["University"],
+        "summary": "Get all universities",
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {
+            "description": "List of universities",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UniversityResponse"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/university/{id}": {
+      "get": {
+        "tags": ["University"],
+        "summary": "Get university by ID",
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer",
+            "description": "University ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "University details",
+            "schema": {
+              "$ref": "#/definitions/UniversityResponse"
+            }
+          },
+          "404": {
+            "description": "University not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "definitions": {
+    "LoginRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "LoginResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateUserRequest": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
+    "UpdateUserRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
+    "UserResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
+    "CreateAcademicRequest": {
+      "type": "object",
+      "properties": {
+        "student_id": {
+          "type": "integer"
+        },
+        "university_id": {
+          "type": "integer"
+        },
+        "core_course_average": {
+          "type": "integer"
+        },
+        "attendance_rate": {
+          "type": "number",
+          "format": "float"
+        },
+        "final_exam_score": {
+          "type": "integer"
+        },
+        "gpa": {
+          "type": "number",
+          "format": "float"
+        },
+        "midterm_exam_score": {
+          "type": "integer"
+        },
+        "project_assignment_score": {
+          "type": "integer"
+        }
+      }
+    },
+    "UpdateAcademicRequest": {
+      "type": "object",
+      "properties": {
+        "core_course_average": {
+          "type": "integer"
+        },
+        "attendance_rate": {
+          "type": "number",
+          "format": "float"
+        },
+        "final_exam_score": {
+          "type": "integer"
+        },
+        "gpa": {
+          "type": "number",
+          "format": "float"
+        },
+        "midterm_exam_score": {
+          "type": "integer"
+        },
+        "project_assignment_score": {
+          "type": "integer"
+        }
+      }
+    },
+    "AcademicResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "student_id": {
+          "type": "integer"
+        },
+        "university_id": {
+          "type": "integer"
+        },
+        "core_course_average": {
+          "type": "integer"
+        },
+        "attendance_rate": {
+          "type": "number",
+          "format": "float"
+        },
+        "final_exam_score": {
+          "type": "integer"
+        },
+        "gpa": {
+          "type": "number",
+          "format": "float"
+        },
+        "midterm_exam_score": {
+          "type": "integer"
+        },
+        "project_assignment_score": {
+          "type": "integer"
+        }
+      }
+    },
+    "AcademicDTO": {
+      "type": "object",
+      "properties": {
+        "student_id": {
+          "type": "integer"
+        },
+        "university_id": {
+          "type": "integer"
+        },
+        "core_course_average": {
+          "type": "integer"
+        },
+        "attendance_rate": {
+          "type": "number",
+          "format": "float"
+        },
+        "final_exam_score": {
+          "type": "integer"
+        },
+        "gpa": {
+          "type": "number",
+          "format": "float"
+        },
+        "midterm_exam_score": {
+          "type": "integer"
+        },
+        "project_assignment_score": {
+          "type": "integer"
+        }
+      }
+    },
+    "FuzzyResponse": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "integer"
+        },
+        "category": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "object",
+          "properties": {
+            "gpa": {
+              "type": "number"
+            },
+            "cca": {
+              "type": "number"
+            },
+            "attendance": {
+              "type": "number"
+            }
+          }
+        },
+        "fuzzy_membership": {
+          "type": "object",
+          "properties": {
+            "gpa": {
+              "type": "object",
+              "properties": {
+                "low": {
+                  "type": "number"
+                },
+                "medium": {
+                  "type": "number"
+                },
+                "high": {
+                  "type": "number"
+                }
+              }
+            },
+            "cca": {
+              "type": "object",
+              "properties": {
+                "low": {
+                  "type": "number"
+                },
+                "medium": {
+                  "type": "number"
+                },
+                "high": {
+                  "type": "number"
+                }
+              }
+            },
+            "attendance": {
+              "type": "object",
+              "properties": {
+                "low": {
+                  "type": "number"
+                },
+                "medium": {
+                  "type": "number"
+                },
+                "high": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "inference_output": {
+          "type": "object"
+        }
+      }
+    },
+    "UniversityResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "University ID"
+        },
+        "name": {
+          "type": "string",
+          "description": "University name"
+        },
+        "address": {
+          "type": "string",
+          "description": "University address"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      }
+    }
+  }
+}
