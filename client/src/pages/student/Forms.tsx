@@ -49,16 +49,23 @@ function useDebouncedEffect(
 
 type AcademicFormProps = {
   studentId?: string;
+  universityId?: string | number; // Add this prop to accept university ID from parent
 };
 
-export default function AcademicForm({ studentId }: AcademicFormProps) {
+export default function AcademicForm({
+  studentId,
+  universityId: propUniversityId,
+}: AcademicFormProps) {
   const token = getCookie("access_token");
   const payload = token
     ? decodeJwtPayload<{ user_id?: number; university_id?: number }>(token)
     : null;
   const student_id = studentId ? Number(studentId) : payload?.user_id;
-  const university_id =
-    getUniversityFromAccessTokenCookie() != null
+
+  // Use prop universityId first, then fallback to token-based logic
+  const university_id = propUniversityId
+    ? Number(propUniversityId)
+    : getUniversityFromAccessTokenCookie() != null
       ? Number(getUniversityFromAccessTokenCookie())
       : payload?.university_id;
 
@@ -68,9 +75,10 @@ export default function AcademicForm({ studentId }: AcademicFormProps) {
       payload,
       student_id,
       university_id,
+      propUniversityId,
       message: "JWT and ID values at component mount",
     });
-  }, [token, payload, student_id, university_id]);
+  }, [token, payload, student_id, university_id, propUniversityId]);
 
   const queryClient = useQueryClient();
 
@@ -170,11 +178,21 @@ export default function AcademicForm({ studentId }: AcademicFormProps) {
     return {
       student_id: formData.student_id,
       university_id: formData.university_id,
-      core_course_average: parseFloat(Number(formData.core_course_average || 0).toFixed(2)),
-      attendance_rate: parseFloat(parseAttendanceForSubmit(String(formData.attendance_rate || "0")).toFixed(2)),
-      final_exam_score: parseFloat(Number(formData.final_exam_score || 0).toFixed(2)),
+      core_course_average: parseFloat(
+        Number(formData.core_course_average || 0).toFixed(2)
+      ),
+      attendance_rate: parseFloat(
+        parseAttendanceForSubmit(
+          String(formData.attendance_rate || "0")
+        ).toFixed(2)
+      ),
+      final_exam_score: parseFloat(
+        Number(formData.final_exam_score || 0).toFixed(2)
+      ),
       gpa: parseFloat(Number(formData.gpa || 0).toFixed(2)),
-      midterm_exam_score: parseFloat(Number(formData.midterm_exam_score || 0).toFixed(2)),
+      midterm_exam_score: parseFloat(
+        Number(formData.midterm_exam_score || 0).toFixed(2)
+      ),
     };
   };
 
@@ -201,11 +219,15 @@ export default function AcademicForm({ studentId }: AcademicFormProps) {
 
       if (editMode && existing) {
         const changed =
-          formattedData.core_course_average !== parseFloat(Number(existing.core_course_average).toFixed(2)) ||
-          formattedData.attendance_rate !== parseFloat(Number(existing.attendance_rate).toFixed(2)) ||
-          formattedData.final_exam_score !== parseFloat(Number(existing.final_exam_score).toFixed(2)) ||
+          formattedData.core_course_average !==
+            parseFloat(Number(existing.core_course_average).toFixed(2)) ||
+          formattedData.attendance_rate !==
+            parseFloat(Number(existing.attendance_rate).toFixed(2)) ||
+          formattedData.final_exam_score !==
+            parseFloat(Number(existing.final_exam_score).toFixed(2)) ||
           formattedData.gpa !== parseFloat(Number(existing.gpa).toFixed(2)) ||
-          formattedData.midterm_exam_score !== parseFloat(Number(existing.midterm_exam_score).toFixed(2));
+          formattedData.midterm_exam_score !==
+            parseFloat(Number(existing.midterm_exam_score).toFixed(2));
 
         if (changed) {
           console.log("Sending update to backend:", formattedData);
@@ -251,10 +273,18 @@ export default function AcademicForm({ studentId }: AcademicFormProps) {
 
   const validation = {
     gpa: form ? validateGPA(String(form.gpa || "")) : true,
-    attendance_rate: form ? validateAttendance(String(form.attendance_rate || "")) : true,
-    midterm_exam_score: form ? validateMidterm(String(form.midterm_exam_score || "")) : true,
-    core_course_average: form ? validateCoreCourse(String(form.core_course_average || "")) : true,
-    final_exam_score: form ? validateFinalExamScore(String(form.final_exam_score || "")) : true,
+    attendance_rate: form
+      ? validateAttendance(String(form.attendance_rate || ""))
+      : true,
+    midterm_exam_score: form
+      ? validateMidterm(String(form.midterm_exam_score || ""))
+      : true,
+    core_course_average: form
+      ? validateCoreCourse(String(form.core_course_average || ""))
+      : true,
+    final_exam_score: form
+      ? validateFinalExamScore(String(form.final_exam_score || ""))
+      : true,
   };
 
   if (isLoading && !form) {

@@ -87,8 +87,8 @@ func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// Handle university selection/creation
 	var university *models.University
 	if req.UniversityID != 0 {
-		// Use existing university
-		university, err = h.repo.GetUniversityByID(r.Context(), req.UniversityID)
+		// Use existing university - convert uint to int for the function call
+		university, err = h.repo.GetUniversityByID(r.Context(), int(req.UniversityID))
 		if err != nil {
 			utils.WriteResponse(w, http.StatusBadRequest, []utils.ErrorDetail{
 				{Field: "university_id", Message: "University not found"},
@@ -157,7 +157,7 @@ func (h *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	if university != nil {
 		response.University = &UniversityResponse{
-			ID:   university.ID,
+			ID:   uint(university.ID),
 			Name: university.Name,
 		}
 	}
@@ -177,7 +177,7 @@ func (h *authHandler) GetUniversities(w http.ResponseWriter, r *http.Request) {
 	var response []UniversityResponse
 	for _, uni := range universities {
 		response = append(response, UniversityResponse{
-			ID:   uni.ID,
+			ID:   uint(uni.ID),
 			Name: uni.Name,
 		})
 	}

@@ -11,7 +11,7 @@ type RegisterRequest struct {
 	Name              string `json:"name"`
 	Password          string `json:"password"`
 	Role              string `json:"role"`
-	UniversityID      int    `json:"university_id,omitempty"`      // For selecting existing university
+	UniversityID      uint   `json:"university_id,omitempty"`      // For selecting existing university
 	UniversityName    string `json:"university_name,omitempty"`    // For creating new university
 	UniversityAddress string `json:"university_address,omitempty"` // For creating new university
 }
@@ -31,6 +31,6 @@ type RegisterResponse struct {
 }
 
 type UniversityResponse struct {
-	ID   int    `json:"id"`
+	ID   uint   `json:"id"`
 	Name string `json:"name"`
 }

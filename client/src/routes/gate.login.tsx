@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import LoginForm from "@/pages/auth/Login";
 import { getRoleFromAccessTokenCookie } from "@/lib/JwtDecode";
-import NotFound from "@/components/notFound";
+import NotFound from "@/components/NotFound";
 
 export const Route = createFileRoute("/gate/login")({
   loader: async () => {

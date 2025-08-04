@@ -185,10 +185,18 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 	mockRepo := NewMockAuthRepository(ctrl)
 	handler := NewAuthHandler(mockRepo)
 
+	// Mock university
+	university := &models.University{ID: 1, Name: "Test University"}
+
 	// Mock user not found (username available)
 	mockRepo.EXPECT().
 		GetUserByUsername(gomock.Any(), "newuser").
 		Return(nil, errors.New("not found"))
+
+	// Mock get university by ID - FIXED: expecting int instead of uint
+	mockRepo.EXPECT().
+		GetUniversityByID(gomock.Any(), 1).
+		Return(university, nil)
 
 	// Mock successful user creation
 	expectedUser := &models.User{
@@ -201,11 +209,17 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 		CreateUser(gomock.Any(), gomock.Any()).
 		Return(expectedUser, nil)
 
+	// Mock academic record creation
+	mockRepo.EXPECT().
+		CreateAcademic(gomock.Any(), gomock.Any()).
+		Return(&models.Academic{}, nil)
+
 	reqBody := RegisterRequest{
-		Username: "newuser",
-		Name:     "New User",
-		Password: "password123",
-		Role:     "student",
+		Username:     "newuser",
+		Name:         "New User",
+		Password:     "password123",
+		Role:         "student",
+		UniversityID: 1, // Added university ID for student
 	}
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", registerPath, bytes.NewReader(body))
@@ -237,6 +251,56 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 
 	if registerResp.Message != "User registered successfully" {
 		t.Errorf("expected success message, got %s", registerResp.Message)
+	}
+}
+
+func TestAuthHandler_Register_Success_Admin(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := NewMockAuthRepository(ctrl)
+	handler := NewAuthHandler(mockRepo)
+
+	// Mock user not found (username available)
+	mockRepo.EXPECT().
+		GetUserByUsername(gomock.Any(), "adminuser").
+		Return(nil, errors.New("not found"))
+
+	// Mock successful user creation
+	expectedUser := &models.User{
+		ID:       1,
+		Username: "adminuser",
+		Name:     "Admin User",
+		Role:     "admin",
+	}
+	mockRepo.EXPECT().
+		CreateUser(gomock.Any(), gomock.Any()).
+		Return(expectedUser, nil)
+
+	reqBody := RegisterRequest{
+		Username: "adminuser",
+		Name:     "Admin User",
+		Password: "password123",
+		Role:     "admin",
+		// No university required for admin
+	}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("POST", registerPath, bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	handler.Register(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("expected 201, got %d", w.Code)
+	}
+
+	resp := parseResponse(w)
+	if resp.Errors != nil {
+		t.Errorf("expected no errors, got %v", resp.Errors)
+	}
+
+	if resp.Data == nil {
+		t.Errorf("expected data, got nil")
 	}
 }
 
@@ -304,17 +368,20 @@ func TestAuthHandler_Register_UsernameExists(t *testing.T) {
 	mockRepo := NewMockAuthRepository(ctrl)
 	handler := NewAuthHandler(mockRepo)
 
-	// Mock user found (username already exists)
+	// Hapus mockRepo.EXPECT().GetUniversityByID karena tidak dipanggil sebelum username check
+
+	// Mock user found (username already exists) - this is the main check
 	existingUser := &models.User{ID: 1, Username: "existinguser"}
 	mockRepo.EXPECT().
 		GetUserByUsername(gomock.Any(), "existinguser").
 		Return(existingUser, nil)
 
 	reqBody := RegisterRequest{
-		Username: "existinguser",
-		Name:     "New User",
-		Password: "password123",
-		Role:     "student",
+		Username:     "existinguser",
+		Name:         "New User",
+		Password:     "password123",
+		Role:         "student",
+		UniversityID: 1, // Added university ID for student
 	}
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", registerPath, bytes.NewReader(body))
@@ -347,10 +414,18 @@ func TestAuthHandler_Register_DatabaseError(t *testing.T) {
 	mockRepo := NewMockAuthRepository(ctrl)
 	handler := NewAuthHandler(mockRepo)
 
+	// Mock university
+	university := &models.University{ID: 1, Name: "Test University"}
+
 	// Mock user not found (username available)
 	mockRepo.EXPECT().
 		GetUserByUsername(gomock.Any(), "newuser").
 		Return(nil, errors.New("not found"))
+
+	// Mock get university by ID - FIXED: expecting int instead of uint
+	mockRepo.EXPECT().
+		GetUniversityByID(gomock.Any(), 1).
+		Return(university, nil)
 
 	// Mock database error during user creation
 	mockRepo.EXPECT().
@@ -358,10 +433,11 @@ func TestAuthHandler_Register_DatabaseError(t *testing.T) {
 		Return(nil, errors.New("database error"))
 
 	reqBody := RegisterRequest{
-		Username: "newuser",
-		Name:     "New User",
-		Password: "password123",
-		Role:     "student",
+		Username:     "newuser",
+		Name:         "New User",
+		Password:     "password123",
+		Role:         "student",
+		UniversityID: 1, // Added university ID for student
 	}
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest("POST", registerPath, bytes.NewReader(body))
@@ -380,5 +456,70 @@ func TestAuthHandler_Register_DatabaseError(t *testing.T) {
 
 	if resp.Errors[0].Message != "Failed to create user" {
 		t.Errorf("expected 'Failed to create user', got %s", resp.Errors[0].Message)
+	}
+}
+
+// Test for creating new university
+func TestAuthHandler_Register_CreateNewUniversity(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := NewMockAuthRepository(ctrl)
+	handler := NewAuthHandler(mockRepo)
+
+	// Mock new university creation
+	newUniversity := &models.University{ID: 2, Name: "New University", Address: "New Address"}
+
+	// Mock user not found (username available)
+	mockRepo.EXPECT().
+		GetUserByUsername(gomock.Any(), "studentuser").
+		Return(nil, errors.New("not found"))
+
+	// Mock create university
+	mockRepo.EXPECT().
+		CreateUniversity(gomock.Any(), gomock.Any()).
+		Return(newUniversity, nil)
+
+	// Mock successful user creation
+	expectedUser := &models.User{
+		ID:       1,
+		Username: "studentuser",
+		Name:     "Student User",
+		Role:     "student",
+	}
+	mockRepo.EXPECT().
+		CreateUser(gomock.Any(), gomock.Any()).
+		Return(expectedUser, nil)
+
+	// Mock academic record creation
+	mockRepo.EXPECT().
+		CreateAcademic(gomock.Any(), gomock.Any()).
+		Return(&models.Academic{}, nil)
+
+	reqBody := RegisterRequest{
+		Username:          "studentuser",
+		Name:              "Student User",
+		Password:          "password123",
+		Role:              "student",
+		UniversityName:    "New University",
+		UniversityAddress: "New Address",
+	}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest("POST", registerPath, bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	handler.Register(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("expected 201, got %d", w.Code)
+	}
+
+	resp := parseResponse(w)
+	if resp.Errors != nil {
+		t.Errorf("expected no errors, got %v", resp.Errors)
+	}
+
+	if resp.Data == nil {
+		t.Errorf("expected data, got nil")
 	}
 }
