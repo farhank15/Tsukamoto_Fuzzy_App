@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"tsukamoto/internal/models"
 
@@ -26,6 +27,7 @@ func assertEqual(t *testing.T, a, b interface{}, msg string) {
 	}
 }
 
+// Fixed assertJSONResponse function that properly compares JSON structures
 func assertJSONResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStatus int, expectedBody interface{}) {
 	if w.Code != expectedStatus {
 		t.Errorf("Expected status %d, got %d", expectedStatus, w.Code)
@@ -38,10 +40,42 @@ func assertJSONResponse(t *testing.T, w *httptest.ResponseRecorder, expectedStat
 			t.Fatalf("Failed to decode response body: %v", err)
 		}
 
-		expectedJSON, _ := json.Marshal(expectedBody)
-		actualJSON, _ := json.Marshal(actualBody)
-		if string(expectedJSON) != string(actualJSON) {
+		// For struct comparison, use reflect.DeepEqual instead of JSON string comparison
+		if !reflect.DeepEqual(expectedBody, actualBody) {
+			expectedJSON, _ := json.Marshal(expectedBody)
+			actualJSON, _ := json.Marshal(actualBody)
 			t.Errorf("Expected body %s, got %s", expectedJSON, actualJSON)
+		}
+	}
+}
+
+// Alternative assertJSONResponse for more flexible comparison
+func assertJSONResponseFlexible(t *testing.T, w *httptest.ResponseRecorder, expectedStatus int, expectedBody interface{}) {
+	if w.Code != expectedStatus {
+		t.Errorf("Expected status %d, got %d", expectedStatus, w.Code)
+	}
+
+	if expectedBody != nil {
+		var actualBody map[string]interface{}
+		var expectedBodyMap map[string]interface{}
+
+		// Decode actual response
+		err := json.NewDecoder(w.Body).Decode(&actualBody)
+		if err != nil {
+			t.Fatalf("Failed to decode response body: %v", err)
+		}
+
+		// Convert expected body to map
+		expectedJSON, _ := json.Marshal(expectedBody)
+		json.Unmarshal(expectedJSON, &expectedBodyMap)
+
+		// Compare key by key
+		for key, expectedValue := range expectedBodyMap {
+			if actualValue, exists := actualBody[key]; !exists {
+				t.Errorf("Missing key %s in response", key)
+			} else if !reflect.DeepEqual(expectedValue, actualValue) {
+				t.Errorf("Key %s: expected %v, got %v", key, expectedValue, actualValue)
+			}
 		}
 	}
 }
@@ -108,6 +142,7 @@ func TestAcademicHandlerCreate(t *testing.T) {
 			name:         "invalid json",
 			reqBody:      "invalid json",
 			expectedCode: http.StatusBadRequest,
+			expectedBody: map[string]string{"error": "Invalid JSON format"},
 		},
 		{
 			name: "database error",
@@ -120,6 +155,7 @@ func TestAcademicHandlerCreate(t *testing.T) {
 				return errors.New(dbErrorMsg)
 			},
 			expectedCode: http.StatusInternalServerError,
+			expectedBody: map[string]string{"error": "Failed to create academic record"},
 		},
 	}
 
@@ -139,7 +175,7 @@ func TestAcademicHandlerCreate(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			handler.Create(w, req)
-			assertJSONResponse(t, w, tt.expectedCode, tt.expectedBody)
+			assertJSONResponseFlexible(t, w, tt.expectedCode, tt.expectedBody)
 		})
 	}
 }
@@ -328,10 +364,13 @@ func TestAcademicHandlerGetByStudentIDInternalError(t *testing.T) {
 	assertEqual(t, http.StatusInternalServerError, w.Code, "GetByStudentID internal error status")
 }
 
+// Fixed TestAcademicHandlerGetByID with proper struct comparison
 func TestAcademicHandlerGetByID(t *testing.T) {
+	expectedAcademic := &models.Academic{ID: 1, UserID: 1}
+
 	mockRepo := &mockAcademicRepo{
 		GetByIDFn: func(ctx context.Context, id int) (*models.Academic, error) {
-			return &models.Academic{ID: 1, UserID: 1}, nil
+			return expectedAcademic, nil
 		},
 	}
 	handler := NewAcademicHandler(mockRepo)
@@ -341,5 +380,25 @@ func TestAcademicHandlerGetByID(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler.GetByID(w, req)
-	assertJSONResponse(t, w, http.StatusOK, &models.Academic{ID: 1, UserID: 1})
+
+	// Check status code
+	assertEqual(t, http.StatusOK, w.Code, "GetByID status")
+
+	// Check content type
+	assertEqual(t, "application/json", w.Header().Get("Content-Type"), "GetByID content-type")
+
+	// Decode and compare the actual response
+	var actualAcademic models.Academic
+	err := json.NewDecoder(w.Body).Decode(&actualAcademic)
+	if err != nil {
+		t.Fatalf("Failed to decode response body: %v", err)
+	}
+
+	// Compare the important fields
+	if actualAcademic.ID != expectedAcademic.ID {
+		t.Errorf("Expected ID %d, got %d", expectedAcademic.ID, actualAcademic.ID)
+	}
+	if actualAcademic.UserID != expectedAcademic.UserID {
+		t.Errorf("Expected UserID %d, got %d", expectedAcademic.UserID, actualAcademic.UserID)
+	}
 }

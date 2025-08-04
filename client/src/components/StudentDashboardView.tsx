@@ -10,8 +10,9 @@ const BASE_URL = import.meta.env.VITE_BASE_URL_API;
 
 type Student = {
   id: number;
-  university?: { name: string };
-  user?: { id: number; name: string; role: string }; // tambahkan id di sini
+  university_id?: number; // Add this field
+  university?: { id: number; name: string }; // Make sure university has id
+  user?: { id: number; name: string; role: string };
 };
 
 type Props = {
@@ -31,20 +32,20 @@ export function StudentDashboardView({ studentId }: Props) {
     : studentId;
 
   React.useEffect(() => {
-    console.log("Fetching studentId:", studentId); // Log studentId
+    console.log("Fetching studentId:", studentId);
     setLoading(true);
     setError(null);
     axios
       .get(`${BASE_URL}/academic/student/${studentId}`)
       .then((res) => {
-        console.log("Student API response:", res.data); // Log response
+        console.log("Student API response:", res.data);
         // API mengembalikan array, ambil elemen pertama
         if (Array.isArray(res.data) && res.data.length > 0)
           setStudent(res.data[0]);
         else setError("Student not found");
       })
       .catch((err) => {
-        console.error("Student API error:", err); // Log error
+        console.error("Student API error:", err);
         setError(err.message);
       })
       .finally(() => setLoading(false));
@@ -66,6 +67,9 @@ export function StudentDashboardView({ studentId }: Props) {
       ? String(student.user.id)
       : fallbackUserId;
 
+  // Get university ID from student data
+  const universityId = student.university_id || student.university?.id;
+
   return (
     <div className="mt-10 p-4">
       <div className="grid grid-cols-[2fr_1fr] gap-4 mb-4">
@@ -83,7 +87,7 @@ export function StudentDashboardView({ studentId }: Props) {
       </div>
       <StudentPerformanceChart studentId={userId} />
       <div className="px-4">
-        <AcademicForm studentId={userId} />
+        <AcademicForm studentId={userId} universityId={universityId} />
       </div>
     </div>
   );

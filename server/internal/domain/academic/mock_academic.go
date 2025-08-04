@@ -156,6 +156,18 @@ func (mr *MockAcademicHandlerMockRecorder) GetAll(w, r interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAll", reflect.TypeOf((*MockAcademicHandler)(nil).GetAll), w, r)
 }
 
+// GetByID mocks base method.
+func (m *MockAcademicHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "GetByID", w, r)
+}
+
+// GetByID indicates an expected call of GetByID.
+func (mr *MockAcademicHandlerMockRecorder) GetByID(w, r interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByID", reflect.TypeOf((*MockAcademicHandler)(nil).GetByID), w, r)
+}
+
 // GetByStudentID mocks base method.
 func (m *MockAcademicHandler) GetByStudentID(w http.ResponseWriter, r *http.Request) {
 	m.ctrl.T.Helper()
